@@ -1,0 +1,3 @@
+include ':app'
+include ':knife'
+rootProject.name = "KnifeDemo"
