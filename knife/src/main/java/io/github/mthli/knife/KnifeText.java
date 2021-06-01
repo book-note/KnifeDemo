@@ -421,8 +421,8 @@ public class KnifeText extends EditText implements TextWatcher {
             if (start - 1 < 0 || start + 1 > getEditableText().length()) {
                 return false;
             } else {
-                StrikethroughSpan[] before = getEditableText().getSpans(start - 1, start, StrikethroughSpan.class);
-                StrikethroughSpan[] after = getEditableText().getSpans(start, start + 1, StrikethroughSpan.class);
+                BackgroundColorSpan[] before = getEditableText().getSpans(start - 1, start, BackgroundColorSpan.class);
+                BackgroundColorSpan[] after = getEditableText().getSpans(start, start + 1, BackgroundColorSpan.class);
                 return before.length > 0 && after.length > 0;
             }
         } else {
