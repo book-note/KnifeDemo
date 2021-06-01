@@ -20,23 +20,37 @@
 
 package io.github.mthli.knife;
 
+import android.graphics.Color;
 import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.Spanned;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.BulletSpan;
 import android.text.style.StrikethroughSpan;
 
 import org.xml.sax.XMLReader;
+
+import java.lang.reflect.Field;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class KnifeTagHandler implements Html.TagHandler {
     private static final String BULLET_LI = "li";
     private static final String STRIKETHROUGH_S = "s";
     private static final String STRIKETHROUGH_STRIKE = "strike";
     private static final String STRIKETHROUGH_DEL = "del";
+    private static final String MARK = "mark";
+    private int markBackgroundColor = Color.parseColor("#F9E79F");
 
-    private static class Li {}
-    private static class Strike {}
+    private static class Li {
+    }
+
+    private static class Strike {
+    }
+
+    private static class Mark {
+    }
 
     @Override
     public void handleTag(boolean opening, String tag, Editable output, XMLReader xmlReader) {
@@ -48,6 +62,9 @@ public class KnifeTagHandler implements Html.TagHandler {
                 start(output, new Li());
             } else if (tag.equalsIgnoreCase(STRIKETHROUGH_S) || tag.equalsIgnoreCase(STRIKETHROUGH_STRIKE) || tag.equalsIgnoreCase(STRIKETHROUGH_DEL)) {
                 start(output, new Strike());
+            } else if (tag.equalsIgnoreCase(MARK)) {
+                markBackgroundColor = getMarkBackgroundColor(xmlReader);
+                start(output, new Mark());
             }
         } else {
             if (tag.equalsIgnoreCase(BULLET_LI)) {
@@ -57,6 +74,8 @@ public class KnifeTagHandler implements Html.TagHandler {
                 end(output, Li.class, new BulletSpan());
             } else if (tag.equalsIgnoreCase(STRIKETHROUGH_S) || tag.equalsIgnoreCase(STRIKETHROUGH_STRIKE) || tag.equalsIgnoreCase(STRIKETHROUGH_DEL)) {
                 end(output, Strike.class, new StrikethroughSpan());
+            } else if (tag.equalsIgnoreCase(MARK)) {
+                end(output, Mark.class, new BackgroundColorSpan(markBackgroundColor));
             }
         }
     }
@@ -92,5 +111,57 @@ public class KnifeTagHandler implements Html.TagHandler {
 
             return null;
         }
+    }
+
+    private int getMarkBackgroundColor(XMLReader xmlReader) {
+        String styleAttr = getProperty(xmlReader, "style");
+        if (styleAttr == null) {
+            return Color.parseColor("#F9E79F");
+        }
+        Pattern pattern = Pattern.compile("background-color:(.*+)");
+        Matcher matcher = pattern.matcher(styleAttr);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException e) {
+                return Color.parseColor("#F9E79F");
+            }
+        } else {
+            return Color.parseColor("#F9E79F");
+        }
+    }
+
+    /**
+     * 利用反射获取html标签的属性值
+     *
+     * @param xmlReader
+     * @param property
+     * @return
+     */
+    private String getProperty(XMLReader xmlReader, String property) {
+        try {
+            Field elementField = xmlReader.getClass().getDeclaredField("theNewElement");
+            elementField.setAccessible(true);
+            Object element = elementField.get(xmlReader);
+            Field attsField = element.getClass().getDeclaredField("theAtts");
+            attsField.setAccessible(true);
+            Object atts = attsField.get(element);
+            Field dataField = atts.getClass().getDeclaredField("data");
+            dataField.setAccessible(true);
+            String[] data = (String[]) dataField.get(atts);
+            Field lengthField = atts.getClass().getDeclaredField("length");
+            lengthField.setAccessible(true);
+            int len = (Integer) lengthField.get(atts);
+
+            for (int i = 0; i < len; i++) {
+                // 这边的property换成你自己的属性名就可以了
+                if (property.equals(data[i * 5 + 1])) {
+                    return data[i * 5 + 4];
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

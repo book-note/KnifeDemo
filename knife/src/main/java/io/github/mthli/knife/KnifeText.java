@@ -24,6 +24,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.BulletSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.StrikethroughSpan;
@@ -46,6 +47,7 @@ public class KnifeText extends EditText implements TextWatcher {
     public static final int FORMAT_BULLET = 0x05;
     public static final int FORMAT_QUOTE = 0x06;
     public static final int FORMAT_LINK = 0x07;
+    public static final int FORMAT_HIGHLIGHT = 0x08;
 
     private int bulletColor = 0;
     private int bulletRadius = 0;
@@ -373,8 +375,69 @@ public class KnifeText extends EditText implements TextWatcher {
         }
     }
 
-    // BulletSpan ==================================================================================
+    // BackgroundColorSpan ==================================================================================
+    public void highlight(int colorInt, boolean valid) {
+        if (valid) {
+            highlightValid(colorInt, getSelectionStart(), getSelectionEnd());
+        } else {
+            highlightInvalid(colorInt, getSelectionStart(), getSelectionEnd());
+        }
+    }
 
+    private void highlightValid(int colorInt, int start, int end) {
+        if (start >= end) {
+            return;
+        }
+        getEditableText().setSpan(new BackgroundColorSpan(colorInt), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private void highlightInvalid(int colorInt, int start, int end) {
+        BackgroundColorSpan[] spans = getEditableText().getSpans(start, end, BackgroundColorSpan.class);
+        List<KnifePart> list = new ArrayList<>();
+
+        for (BackgroundColorSpan span : spans) {
+            list.add(new KnifePart(getEditableText().getSpanStart(span), getEditableText().getSpanEnd(span)));
+            getEditableText().removeSpan(span);
+        }
+
+        for (KnifePart part : list) {
+            if (part.isValid()) {
+                if (part.getStart() < start) {
+                    highlightValid(colorInt, part.getStart(), start);
+                }
+                if (part.getEnd() > end) {
+                    highlightValid(colorInt, end, part.getEnd());
+                }
+            }
+        }
+    }
+
+    protected boolean containHighlight(int start, int end) {
+        if (start > end) {
+            return false;
+        }
+
+        if (start == end) {
+            if (start - 1 < 0 || start + 1 > getEditableText().length()) {
+                return false;
+            } else {
+                StrikethroughSpan[] before = getEditableText().getSpans(start - 1, start, StrikethroughSpan.class);
+                StrikethroughSpan[] after = getEditableText().getSpans(start, start + 1, StrikethroughSpan.class);
+                return before.length > 0 && after.length > 0;
+            }
+        } else {
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = start; i < end; i++) {
+                if (getEditableText().getSpans(i, i + 1, BackgroundColorSpan.class).length > 0) {
+                    builder.append(getEditableText().subSequence(i, i + 1).toString());
+                }
+            }
+            return getEditableText().subSequence(start, end).toString().equals(builder.toString());
+        }
+    }
+
+    // BulletSpan ==================================================================================
     public void bullet(boolean valid) {
         if (valid) {
             bulletValid();
@@ -797,21 +860,25 @@ public class KnifeText extends EditText implements TextWatcher {
     // Helper ======================================================================================
 
     public boolean contains(int format) {
+        int start = getSelectionStart();
+        int end = getSelectionEnd();
         switch (format) {
             case FORMAT_BOLD:
-                return containStyle(Typeface.BOLD, getSelectionStart(), getSelectionEnd());
+                return containStyle(Typeface.BOLD, start, end);
             case FORMAT_ITALIC:
-                return containStyle(Typeface.ITALIC, getSelectionStart(), getSelectionEnd());
+                return containStyle(Typeface.ITALIC, start, end);
             case FORMAT_UNDERLINED:
-                return containUnderline(getSelectionStart(), getSelectionEnd());
+                return containUnderline(start, end);
             case FORMAT_STRIKETHROUGH:
-                return containStrikethrough(getSelectionStart(), getSelectionEnd());
+                return containStrikethrough(start, end);
             case FORMAT_BULLET:
                 return containBullet();
             case FORMAT_QUOTE:
                 return containQuote();
             case FORMAT_LINK:
-                return containLink(getSelectionStart(), getSelectionEnd());
+                return containLink(start, end);
+            case FORMAT_HIGHLIGHT:
+                return containHighlight(getSelectionStart(), getSelectionEnd());
             default:
                 return false;
         }

@@ -21,6 +21,7 @@ import android.graphics.Typeface;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.BulletSpan;
 import android.text.style.CharacterStyle;
 import android.text.style.ImageSpan;
@@ -175,6 +176,12 @@ public class KnifeParser {
                     out.append("<del>");
                 }
 
+                if (spans[j] instanceof BackgroundColorSpan) {
+                    BackgroundColorSpan span = (BackgroundColorSpan) spans[j];
+                    int bgColor = span.getBackgroundColor();
+                    out.append("<mark style=\"background-color:" + bgColor + "\">");
+                }
+
                 if (spans[j] instanceof URLSpan) {
                     out.append("<a href=\"");
                     out.append(((URLSpan) spans[j]).getURL());
@@ -199,6 +206,10 @@ public class KnifeParser {
 
                 if (spans[j] instanceof StrikethroughSpan) {
                     out.append("</del>");
+                }
+
+                if (spans[j] instanceof BackgroundColorSpan) {
+                    out.append("</mark>");
                 }
 
                 if (spans[j] instanceof UnderlineSpan) {
