@@ -18,9 +18,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnHighlight).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                knifeText.highlight(Color.RED, !knifeText.contains(KnifeText.FORMAT_HIGHLIGHT));
+                knifeText.fromHtml("<mark style=\"background-color:-3609096\">12</mark>34<mark style=\"background-color:-3609096\">56</mark>7<mark style=\"background-color:-3609096\">89</mark>");
             }
         });
-
     }
 }

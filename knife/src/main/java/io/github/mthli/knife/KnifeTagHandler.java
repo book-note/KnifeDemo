@@ -118,11 +118,15 @@ public class KnifeTagHandler implements Html.TagHandler {
         if (styleAttr == null) {
             return Color.parseColor("#F9E79F");
         }
-        Pattern pattern = Pattern.compile("background-color:(.*+)");
+        Pattern pattern = Pattern.compile("background-color:(.*)");
         Matcher matcher = pattern.matcher(styleAttr);
         if (matcher.find()) {
             try {
-                return Integer.parseInt(matcher.group(1));
+                if (matcher.groupCount() >= 2) {
+                    return Integer.parseInt(matcher.group(1));
+                } else {
+                    return Color.parseColor("#F9E79F");
+                }
             } catch (NumberFormatException e) {
                 return Color.parseColor("#F9E79F");
             }
