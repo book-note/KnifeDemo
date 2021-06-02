@@ -34,7 +34,7 @@ import android.text.style.UnderlineSpan;
 
 public class KnifeParser {
     public static Spanned fromHtml(String source) {
-        if (!source.startsWith("&zwj;")) {
+        if (!TextUtils.isEmpty(source) && !source.startsWith("&zwj;")){
             source = "&zwj;" + source;
         }
         source = source.replace("\n", "<br>");
