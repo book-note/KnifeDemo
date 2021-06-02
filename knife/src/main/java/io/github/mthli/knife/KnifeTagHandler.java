@@ -122,7 +122,7 @@ public class KnifeTagHandler implements Html.TagHandler {
         Matcher matcher = pattern.matcher(styleAttr);
         if (matcher.find()) {
             try {
-                if (matcher.groupCount() >= 2) {
+                if (matcher.groupCount() >= 1) {
                     return Integer.parseInt(matcher.group(1));
                 } else {
                     return Color.parseColor("#F9E79F");
