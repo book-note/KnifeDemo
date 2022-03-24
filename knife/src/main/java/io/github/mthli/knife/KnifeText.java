@@ -946,6 +946,6 @@ public class KnifeText extends EditText implements TextWatcher {
 
     public void indent() {
         int index = this.getSelectionStart();
-        this.getText().insert(index, "      ");
+        this.getText().insert(index, "\u3000\u3000");
     }
 }
