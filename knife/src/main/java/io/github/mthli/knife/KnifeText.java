@@ -907,7 +907,7 @@ public class KnifeText extends EditText implements TextWatcher {
         }
         source = source.replaceAll("\n", "<br>");
         SpannableStringBuilder builder = new SpannableStringBuilder();
-        builder.append(KnifeParser.fromHtml(source));
+        builder.append(KnifeParser.fromHtml(getContext().getApplicationContext(), source));
         switchToKnifeStyle(builder, 0, builder.length());
         setText(builder);
     }

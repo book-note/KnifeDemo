@@ -20,6 +20,8 @@
 
 package io.github.mthli.knife;
 
+import android.app.Application;
+import android.content.Context;
 import android.graphics.Color;
 import android.text.Editable;
 import android.text.Html;
@@ -32,8 +34,11 @@ import android.text.style.StrikethroughSpan;
 import org.xml.sax.XMLReader;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.github.mthli.knife.utils.ThemeUtil;
 
 public class KnifeTagHandler implements Html.TagHandler {
     private static final String BULLET_LI = "li";
@@ -41,7 +46,31 @@ public class KnifeTagHandler implements Html.TagHandler {
     private static final String STRIKETHROUGH_STRIKE = "strike";
     private static final String STRIKETHROUGH_DEL = "del";
     private static final String MARK = "mark";
-    private int markBackgroundColor = Color.parseColor("#F9E79F");
+    private int defaultMarkBackgroundColor = Color.parseColor("#F9E79F");
+    private int markBackgroundColor = defaultMarkBackgroundColor;
+    private Context context;
+
+    private static final HashMap<Integer, Integer> COLOR_MAP = new HashMap<>();
+
+    static {
+        COLOR_MAP.put(Color.parseColor("#FFE1F9"), Color.parseColor("#665A64"));
+        COLOR_MAP.put(Color.parseColor("#FDFBCA"), Color.parseColor("#8D8B42"));
+        COLOR_MAP.put(Color.parseColor("#C8F2EE"), Color.parseColor("#7C9299"));
+        COLOR_MAP.put(Color.parseColor("#C8EDF8"), Color.parseColor("#506062"));
+        COLOR_MAP.put(Color.parseColor("#B1C7E7"), Color.parseColor("#323333"));
+        COLOR_MAP.put(Color.parseColor("#A6CED1"), Color.parseColor("#6E8788"));
+        COLOR_MAP.put(Color.parseColor("#D4E8A4"), Color.parseColor("#818F66"));
+        COLOR_MAP.put(Color.parseColor("#F0D472"), Color.parseColor("#A89C00"));
+        COLOR_MAP.put(Color.parseColor("#F2A4B8"), Color.parseColor("#AD7683"));
+        COLOR_MAP.put(Color.parseColor("#EB88E1"), Color.parseColor("#C070B7"));
+        COLOR_MAP.put(Color.parseColor("#ECD8FE"), Color.parseColor("#83798D"));
+        COLOR_MAP.put(Color.parseColor("#DABDB9"), Color.parseColor("#A9928F"));
+        COLOR_MAP.put(Color.parseColor("#DFDFDF"), Color.parseColor("#626262"));
+    }
+
+    public KnifeTagHandler(Context context) {
+        this.context = context;
+    }
 
     private static class Li {
     }
@@ -75,7 +104,7 @@ public class KnifeTagHandler implements Html.TagHandler {
             } else if (tag.equalsIgnoreCase(STRIKETHROUGH_S) || tag.equalsIgnoreCase(STRIKETHROUGH_STRIKE) || tag.equalsIgnoreCase(STRIKETHROUGH_DEL)) {
                 end(output, Strike.class, new StrikethroughSpan());
             } else if (tag.equalsIgnoreCase(MARK)) {
-                end(output, Mark.class, new BackgroundColorSpan(markBackgroundColor));
+                end(output, Mark.class, new BackgroundColorSpan(optimizeDarkMode(markBackgroundColor)));
             }
         }
     }
@@ -116,7 +145,7 @@ public class KnifeTagHandler implements Html.TagHandler {
     private int getMarkBackgroundColor(XMLReader xmlReader) {
         String styleAttr = getProperty(xmlReader, "style");
         if (styleAttr == null) {
-            return Color.parseColor("#F9E79F");
+            return defaultMarkBackgroundColor;
         }
         Pattern pattern = Pattern.compile("background-color:(.*)");
         Matcher matcher = pattern.matcher(styleAttr);
@@ -125,13 +154,13 @@ public class KnifeTagHandler implements Html.TagHandler {
                 if (matcher.groupCount() >= 1) {
                     return Integer.parseInt(matcher.group(1));
                 } else {
-                    return Color.parseColor("#F9E79F");
+                    return defaultMarkBackgroundColor;
                 }
             } catch (NumberFormatException e) {
-                return Color.parseColor("#F9E79F");
+                return defaultMarkBackgroundColor;
             }
         } else {
-            return Color.parseColor("#F9E79F");
+            return defaultMarkBackgroundColor;
         }
     }
 
@@ -167,5 +196,18 @@ public class KnifeTagHandler implements Html.TagHandler {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private int optimizeDarkMode(int markBackgroundColor) {
+        boolean isDarkMode = ThemeUtil.isNightMode(context);
+        if (!isDarkMode) {
+            return markBackgroundColor;
+        }
+        Integer darkModeColor = COLOR_MAP.get(markBackgroundColor);
+        if (darkModeColor == null) {
+            return defaultMarkBackgroundColor;
+        } else {
+            return darkModeColor;
+        }
     }
 }

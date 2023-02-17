@@ -17,6 +17,8 @@
 
 package io.github.mthli.knife;
 
+import android.app.Application;
+import android.content.Context;
 import android.graphics.Typeface;
 import android.text.Html;
 import android.text.Spanned;
@@ -33,12 +35,12 @@ import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
 
 public class KnifeParser {
-    public static Spanned fromHtml(String source) {
+    public static Spanned fromHtml(Context context, String source) {
         if (!TextUtils.isEmpty(source) && !source.startsWith("&zwj;")){
             source = "&zwj;" + source;
         }
         source = source.replace("\n", "<br>");
-        return Html.fromHtml(source, null, new KnifeTagHandler());
+        return Html.fromHtml(source, null, new KnifeTagHandler(context));
     }
 
     public static String toHtml(Spanned text) {
