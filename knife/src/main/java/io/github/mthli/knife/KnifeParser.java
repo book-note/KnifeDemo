@@ -36,7 +36,7 @@ import android.text.style.UnderlineSpan;
 
 public class KnifeParser {
     public static Spanned fromHtml(Context context, String source) {
-        if (!TextUtils.isEmpty(source) && !source.startsWith("&zwj;")){
+        if (!TextUtils.isEmpty(source) && !source.startsWith("&zwj;")) {
             source = "&zwj;" + source;
         }
         source = source.replace("\n", "<br>");
@@ -184,6 +184,10 @@ public class KnifeParser {
                 if (spans[j] instanceof BackgroundColorSpan) {
                     BackgroundColorSpan span = (BackgroundColorSpan) spans[j];
                     int bgColor = span.getBackgroundColor();
+                    Integer lightBgColor = Constant.DARK_TO_LIGHT_COLOR_MAP.get(bgColor);
+                    if (lightBgColor != null) {
+                        bgColor = lightBgColor;
+                    }
                     out.append("<mark style=\"background-color:" + bgColor + "\">");
                 }
 

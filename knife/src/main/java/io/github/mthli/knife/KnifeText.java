@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.github.mthli.knife.utils.ThemeUtil;
+
 public class KnifeText extends EditText implements TextWatcher {
     public static final int FORMAT_BOLD = 0x01;
     public static final int FORMAT_ITALIC = 0x02;
@@ -388,7 +390,7 @@ public class KnifeText extends EditText implements TextWatcher {
         if (start >= end) {
             return;
         }
-        getEditableText().setSpan(new BackgroundColorSpan(colorInt), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        getEditableText().setSpan(new BackgroundColorSpan(ThemeUtil.optimizeDarkMode(getContext(), colorInt)), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     private void highlightInvalid(int colorInt, int start, int end) {
@@ -403,10 +405,10 @@ public class KnifeText extends EditText implements TextWatcher {
         for (KnifePart part : list) {
             if (part.isValid()) {
                 if (part.getStart() < start) {
-                    highlightValid(colorInt, part.getStart(), start);
+                    highlightValid(ThemeUtil.optimizeDarkMode(getContext(), colorInt), part.getStart(), start);
                 }
                 if (part.getEnd() > end) {
-                    highlightValid(colorInt, end, part.getEnd());
+                    highlightValid(ThemeUtil.optimizeDarkMode(getContext(), colorInt), end, part.getEnd());
                 }
             }
         }
