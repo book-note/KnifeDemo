@@ -62,12 +62,13 @@ public class KnifeText extends EditText implements TextWatcher {
     private int quoteStripeWidth = 0;
     private int quoteGapWidth = 0;
 
-    private List<Editable> historyList = new LinkedList<>();
+    private final List<Regret> historyList = new LinkedList<>();
     private boolean historyWorking = false;
     private int historyCursor = 0;
-
     private SpannableStringBuilder inputBefore;
+    private int inputBeforeSelectionEnd;
     private Editable inputLast;
+    private int inputLastSelectionEnd;
 
     public KnifeText(Context context) {
         super(context);
@@ -251,7 +252,6 @@ public class KnifeText extends EditText implements TextWatcher {
         if (start >= end) {
             return;
         }
-
         getEditableText().setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
@@ -774,6 +774,7 @@ public class KnifeText extends EditText implements TextWatcher {
         }
 
         inputBefore = new SpannableStringBuilder(text);
+        inputBeforeSelectionEnd = getSelectionEnd();
     }
 
     @Override
@@ -788,6 +789,7 @@ public class KnifeText extends EditText implements TextWatcher {
         }
 
         inputLast = new SpannableStringBuilder(text);
+        inputLastSelectionEnd = getSelectionEnd();
         if (text != null && text.toString().equals(inputBefore.toString())) {
             return;
         }
@@ -796,7 +798,7 @@ public class KnifeText extends EditText implements TextWatcher {
             historyList.remove(0);
         }
 
-        historyList.add(inputBefore);
+        historyList.add(new Regret(inputBefore, inputBeforeSelectionEnd));
         historyCursor = historyList.size();
     }
 
@@ -810,12 +812,14 @@ public class KnifeText extends EditText implements TextWatcher {
         if (historyCursor >= historyList.size() - 1) {
             historyCursor = historyList.size();
             setText(inputLast);
+            setSelection(inputLastSelectionEnd);
         } else {
             historyCursor++;
-            setText(historyList.get(historyCursor));
+            Regret regret = historyList.get(historyCursor);
+            setText(regret.getEditable());
+            setSelection(regret.getSelectionEnd());
         }
 
-        setSelection(getEditableText().length());
         historyWorking = false;
     }
 
@@ -827,8 +831,9 @@ public class KnifeText extends EditText implements TextWatcher {
         historyWorking = true;
 
         historyCursor--;
-        setText(historyList.get(historyCursor));
-        setSelection(getEditableText().length());
+        Regret regret = historyList.get(historyCursor);
+        setText(regret.getEditable());
+        setSelection(regret.getSelectionEnd());
 
         historyWorking = false;
     }
